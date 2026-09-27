@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+# Runtime state and client data. None of this is source, and some of it names
+# real administrators - reports list privileged accounts, their roles and which
+# are dormant. Keep it local.
+# ---------------------------------------------------------------------------
+Reports/
+Logs/
+*.jsonl
+
+# Remembered ad-hoc tenants, and the tenant list itself. Tenant IDs are not
+# secret - they resolve from any verified domain - but a public list of who you
+# administer is not something to publish.
+tenants.cache.json
+tenants.psd1
+
+# Downloaded catalog sources. Regenerate with Tools\Convert-ControlCatalog.ps1;
+# the generated Controls\*.psd1 IS committed, with its provenance block.
+Tools/*.csv
+Tools/*.json
+REFRENCE_FILES/
+REFERENCE_FILES/
+
+# Editor and OS noise
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini

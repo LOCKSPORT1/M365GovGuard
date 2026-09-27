@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Display formatting for GovGuard.Result.
+
+    Default is a table, because the first question after an audit is always
+    "what failed", not "what does the evidence payload contain". The evidence
+    object is still on every result and still goes into the JSON export in full
+    - it is just no longer printed as @{Thing=System.Object[]} on every row.
+
+    Format-List gives the readable detail, with evidence rendered as JSON.
+-->
+<Configuration>
+  <ViewDefinitions>
+
+    <View>
+      <Name>GovGuard.Result.Table</Name>
+      <ViewSelectedBy>
+        <TypeName>GovGuard.Result</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Rule</Label>
+            <Width>14</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Severity</Label>
+            <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Status</Label>
+            <Width>14</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Finding</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <Wrap />
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>RuleId</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Severity</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.RemediationStatus -and $_.RemediationStatus -ne 'NotAttempted') {
+                      '{0} / {1}' -f $_.Status, $_.RemediationStatus
+                  }
+                  else {
+                      $_.Status
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.Message) { $_.Message } else { $_.Title }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
+        Declared after the table view deliberately. PowerShell selects the first
+        view matching the type for default output, so the table wins; Format-List
+        falls through to this one.
+    -->
+    <View>
+      <Name>GovGuard.Result.List</Name>
+      <ViewSelectedBy>
+        <TypeName>GovGuard.Result</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <PropertyName>RuleId</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>Title</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Severity</Label>
+                <ScriptBlock>
+                  if ($_.BaseSeverity -and $_.BaseSeverity -ne $_.Severity) {
+                      '{0}  (base {1}, adjusted for this cloud)' -f $_.Severity, $_.BaseSeverity
+                  }
+                  else {
+                      $_.Severity
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <PropertyName>Status</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>Message</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Frameworks</Label>
+                <ScriptBlock>(@($_.Frameworks) -join ', ')</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Evidence</Label>
+                <ScriptBlock>
+                  if ($null -eq $_.Evidence) {
+                      ''
+                  }
+                  else {
+                      $json = $_.Evidence | ConvertTo-Json -Depth 5 -Compress
+                      if ($json.Length -gt 900) {
+                          $json.Substring(0, 900) + ' ...(truncated - use .Evidence or the JSON export)'
+                      }
+                      else {
+                          $json
+                      }
+                  }
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <PropertyName>ManualFix</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>TenantName</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
+      <Name>GovGuard.Rule.Table</Name>
+      <ViewSelectedBy>
+        <TypeName>GovGuard.Rule</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Id</Label>
+            <Width>14</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Severity</Label>
+            <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Fix</Label>
+            <Width>5</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Clouds</Label>
+            <Width>22</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Title</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <Wrap />
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Id</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Severity</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>if ($_.Remediable) { 'auto' } else { 'man' }</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>(@($_.Clouds) -join ', ')</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Title</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+  </ViewDefinitions>
+</Configuration>
