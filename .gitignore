@@ -26,3 +26,6 @@ REFERENCE_FILES/
 *.swp
 Thumbs.db
 desktop.ini
+
+# Full runbook including the private sections
+*-full.pdf
